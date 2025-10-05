@@ -129,7 +129,7 @@ Convert the saved training checkpoints into lightweight, portable .pt files for 
 # Example for the best CNN model
 python convert_checkpoint_to_pt.py checkpoints_multi_arch/cnn/cnn-best-model.ckpt -o models/cnn_best.pt -a cnn
 
-# Example for the best Attention model
+# Example for the best Attention model #not working at the moment
 python convert_checkpoint_to_pt.py checkpoints_multi_arch/attention/attention-best-model.ckpt -o models/attention_best.pt -a attention
 
 Running the Web Application
@@ -144,3 +144,5 @@ python transit_detector_app_fixed.py
 Open in Browser: Open your web browser and navigate to http://127.0.0.1:5000.
 
 You can now use the application to detect exoplanets!
+
+Attention modell is not working at the moment
