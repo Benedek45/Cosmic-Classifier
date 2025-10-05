@@ -1,0 +1,8 @@
+matplotlib==3.10.6
+numpy==2.3.3
+pandas==2.3.3
+pytorch_lightning==2.5.3
+seaborn==0.13.2
+torch==2.5.1+cu121
+torch==2.7.0
+torchmetrics==1.8.1
