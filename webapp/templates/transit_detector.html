@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transit Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .device-info {
+            text-align: center;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .form-section {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .result-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .verdict {
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .verdict.detected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .verdict.not-detected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .plot-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .plot-container img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h4 {
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌟 Transit Detection System v2.6</h1>
+        <p class="subtitle">Self-Configuring Exoplanet Detector with Hybrid BLS Mode + CSV Upload</p>
+        <div class="device-info">🖥️ Running on: {{ device }}</div>
+
+        <div class="form-section">
+            <h2>📋 Detection Parameters</h2>
+
+            <div class="form-group">
+                <label for="model_choice">Model Selection</label>
+                <select id="model_choice" required>
+                    <option value="cnn">CNN - Fast & Accurate (98.39% acc, 93k params)</option>
+                    <option value="attention">Attention - Balanced (98.40% acc, 406k params)</option>
+                    <option value="ensemble" selected>Ensemble - Best Accuracy (CNN + Attention voting)</option>
+                </select>
+                <small style="color: #666;">Ensemble mode combines both models for highest accuracy</small>
+            </div>
+
+            <!-- Data Source Selection -->
+            <div class="form-group">
+                <label>Data Source</label>
+                <div style="display: flex; gap: 20px; margin-top: 10px;">
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="data_source" value="telescope" checked onchange="toggleDataSource()">
+                        🌐 Download from Telescope
+                    </label>
+                    <label style="cursor: pointer;">
+                        <input type="radio" name="data_source" value="csv" onchange="toggleDataSource()">
+                        📁 Upload CSV File
+                    </label>
+                </div>
+            </div>
+
+            <!-- Telescope Download Mode -->
+            <div id="telescope-mode">
+                <div class="form-group">
+                    <label for="target_id">Target Star ID</label>
+                    <input type="text" id="target_id" placeholder="e.g., KIC 757450">
+                </div>
+
+                <div class="form-group">
+                    <label for="mission">Mission/Telescope</label>
+                    <select id="mission">
+                        <option value="Kepler">Kepler</option>
+                        <option value="K2">K2</option>
+                        <option value="TESS">TESS</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- CSV Upload Mode -->
+            <div id="csv-mode" style="display: none;">
+                <div class="form-group">
+                    <label for="csv_file">CSV Lightcurve File</label>
+                    <input type="file" id="csv_file" accept=".csv">
+                    <small style="color: #666;">Format: 1 row = 1 lightcurve, columns = flux values</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="csv_row">Row Number (optional)</label>
+                    <input type="number" id="csv_row" min="1" placeholder="Leave empty to pick random row">
+                    <small style="color: #666;">Specific row to analyze, or random if empty</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="csv_planet_id_col">Planet ID Column (optional)</label>
+                    <input type="text" id="csv_planet_id_col" placeholder="e.g., planet_id">
+                    <small style="color: #666;">Name of column containing star/planet IDs</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="normalization_type">Data Normalization Status</label>
+                    <select id="normalization_type">
+                        <option value="relative">Already Relative Flux Normalized (flux/median)</option>
+                        <option value="raw">Raw Flux (will apply relative normalization)</option>
+                        <option value="zscore">Already Z-Score Normalized (mean=0, std=1)</option>
+                        <option value="none">No Normalization Applied (start from raw)</option>
+                    </select>
+                    <small style="color: #666;">Select preprocessing state of your CSV data</small>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="runDetection()">🔍 Detect Transits</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p id="loading-status">Initializing...</p>
+            <small id="loading-detail" style="color: #888;"></small>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <div class="verdict" id="verdict"></div>
+
+            <div class="result-card">
+                <h3>📊 Detection Statistics</h3>
+                <div class="stats-grid" id="stats"></div>
+            </div>
+
+            <div class="result-card" id="agreement-card" style="display: none;">
+                <h3>🤝 Model Agreement Analysis</h3>
+                <div id="agreement-info"></div>
+            </div>
+
+            <div class="result-card">
+                <h3>🎯 Target Information</h3>
+                <div id="target-info"></div>
+            </div>
+
+            <div class="result-card">
+                <h3>⚙️ Inference Details</h3>
+                <div id="mode-info"></div>
+            </div>
+
+            <div class="result-card">
+                <h3>📈 Confidence Analysis</h3>
+                <div class="plot-container" id="plot-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let progressInterval = null;
+
+        function updateProgress(messages) {
+            let index = 0;
+            const statusEl = document.getElementById('loading-status');
+            const detailEl = document.getElementById('loading-detail');
+
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+
+            statusEl.textContent = messages[0].text;
+            detailEl.textContent = messages[0].detail || '';
+
+            progressInterval = setInterval(() => {
+                index++;
+                if (index < messages.length) {
+                    statusEl.textContent = messages[index].text;
+                    detailEl.textContent = messages[index].detail || '';
+                }
+            }, messages[0].duration || 3000);
+        }
+
+        function stopProgress() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+        }
+
+        function toggleDataSource() {
+            const dataSource = document.querySelector('input[name="data_source"]:checked').value;
+            const telescopeMode = document.getElementById('telescope-mode');
+            const csvMode = document.getElementById('csv-mode');
+
+            if (dataSource === 'telescope') {
+                telescopeMode.style.display = 'block';
+                csvMode.style.display = 'none';
+            } else {
+                telescopeMode.style.display = 'none';
+                csvMode.style.display = 'block';
+            }
+        }
+
+        async function runDetection() {
+            const modelChoice = document.getElementById('model_choice').value;
+            const dataSource = document.querySelector('input[name="data_source"]:checked').value;
+
+            // Validate model choice
+            if (!modelChoice) {
+                showError('Please select a model');
+                return;
+            }
+
+            // Build form data based on data source
+            const formData = new FormData();
+            formData.append('model_choice', modelChoice);
+            formData.append('data_source', dataSource);
+
+            if (dataSource === 'telescope') {
+                // Telescope mode
+                const targetId = document.getElementById('target_id').value;
+                const mission = document.getElementById('mission').value;
+
+                if (!targetId) {
+                    showError('Please provide a target ID');
+                    return;
+                }
+
+                formData.append('target_id', targetId);
+                formData.append('mission', mission);
+            } else {
+                // CSV mode
+                const csvFile = document.getElementById('csv_file').files[0];
+                const csvRow = document.getElementById('csv_row').value;
+                const csvPlanetIdCol = document.getElementById('csv_planet_id_col').value;
+                const normalizationType = document.getElementById('normalization_type').value;
+
+                if (!csvFile) {
+                    showError('Please provide a CSV file');
+                    return;
+                }
+
+                formData.append('csv_file', csvFile);
+                if (csvRow) formData.append('csv_row', csvRow);
+                if (csvPlanetIdCol) formData.append('csv_planet_id_col', csvPlanetIdCol);
+                formData.append('normalization_type', normalizationType);
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+
+            // Start progress updates
+            const progressMessages = [
+                {text: 'Connecting to data source...', detail: 'Establishing connection', duration: 2000},
+                {text: 'Fetching lightcurve data...', detail: 'This may take a moment due to NASA servers', duration: 4000},
+                {text: 'Downloading data segments...', detail: 'Processing flux measurements', duration: 3000},
+                {text: 'Running BLS detection...', detail: 'Searching for periodic transit signals', duration: 3000},
+                {text: 'Extracting transit windows...', detail: 'Isolating potential transit events', duration: 2000},
+                {text: 'Normalizing data...', detail: 'Preparing windows for neural network', duration: 2000},
+                {text: 'Running neural network inference...', detail: 'Analyzing with ' + modelChoice.toUpperCase() + ' model', duration: 2000},
+                {text: 'Computing final verdict...', detail: 'Analyzing confidence scores', duration: 2000},
+                {text: 'Generating visualization...', detail: 'Almost done!', duration: 2000}
+            ];
+            updateProgress(progressMessages);
+
+            try {
+                const response = await fetch('/predict_telescope', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                    return;
+                }
+
+                displayResults(data);
+
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                stopProgress();
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            // Verdict
+            const verdict = document.getElementById('verdict');
+            const isDetected = data.results.final_verdict.includes('TRANSIT DETECTED');
+            verdict.textContent = data.results.final_verdict;
+            verdict.className = 'verdict ' + (isDetected ? 'detected' : 'not-detected');
+
+            // Statistics
+            const stats = document.getElementById('stats');
+            stats.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${data.results.total_windows}</div>
+                    <div class="stat-label">Total Windows</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${data.results.detections}</div>
+                    <div class="stat-label">Detections</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${(data.results.detection_rate * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Detection Rate</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${data.results.high_conf_detections || 0}</div>
+                    <div class="stat-label">High Conf (>80%)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${((data.results.top_5_avg || 0) * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Top-5 Avg</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${(data.results.max_confidence * 100).toFixed(1)}%</div>
+                    <div class="stat-label">Max Confidence</div>
+                </div>
+            `;
+
+            // Target info
+            const targetInfo = document.getElementById('target-info');
+            let targetHtml = `<p><strong>Target:</strong> ${data.target_info.target_id}</p>`;
+            targetHtml += `<p><strong>Source:</strong> ${data.target_info.source || data.target_info.mission || 'Unknown'}</p>`;
+
+            // Display different fields based on source
+            if (data.target_info.source === 'CSV Upload') {
+                targetHtml += `<p><strong>Row Number:</strong> ${data.target_info.row_number}</p>`;
+                targetHtml += `<p><strong>Total Rows:</strong> ${data.target_info.total_rows.toLocaleString()}</p>`;
+                targetHtml += `<p><strong>Flux Points:</strong> ${data.target_info.flux_points.toLocaleString()}</p>`;
+                if (data.target_info.preprocessing) {
+                    targetHtml += `<p><strong>Preprocessing:</strong> ${data.target_info.preprocessing}</p>`;
+                }
+            } else {
+                // Telescope data
+                if (data.target_info.segments) {
+                    targetHtml += `<p><strong>Segments:</strong> ${data.target_info.segments}</p>`;
+                }
+                if (data.target_info.total_points) {
+                    targetHtml += `<p><strong>Data Points:</strong> ${data.target_info.total_points.toLocaleString()}</p>`;
+                }
+                if (data.target_info.time_span_days) {
+                    targetHtml += `<p><strong>Time Span:</strong> ${data.target_info.time_span_days.toFixed(1)} days</p>`;
+                }
+            }
+
+            targetInfo.innerHTML = targetHtml;
+
+            // Mode info
+            const modeInfo = document.getElementById('mode-info');
+            let modeHtml = `<p><strong>Mode:</strong> ${data.mode_info.mode}</p>`;
+            modeHtml += `<p><strong>Architecture:</strong> ${data.architecture}</p>`;
+
+            // Show fallback info if used
+            if (data.mode_info.fallback_used) {
+                modeHtml += `<p style="color: orange;"><strong>⚠️ Fallback:</strong> ${data.mode_info.reason}</p>`;
+            }
+
+            // BLS info (if available)
+            if (data.mode_info.bls_period) {
+                modeHtml += `<p><strong>BLS Period:</strong> ${data.mode_info.bls_period.toFixed(3)} days</p>`;
+                modeHtml += `<p><strong>BLS Power:</strong> ${data.mode_info.bls_power?.toFixed(3) || 'N/A'}</p>`;
+                modeHtml += `<p><strong>BLS Duration:</strong> ${data.mode_info.bls_duration?.toFixed(3) || 'N/A'} days</p>`;
+                modeHtml += `<p><strong>Transits Found:</strong> ${data.mode_info.num_transits}</p>`;
+            }
+
+            if (data.mode_info.num_windows) {
+                modeHtml += `<p><strong>Windows Analyzed:</strong> ${data.mode_info.num_windows}</p>`;
+            }
+
+            // Show threshold from model config
+            if (data.threshold !== undefined) {
+                modeHtml += `<p><strong>Threshold:</strong> ${data.threshold}</p>`;
+            }
+
+            // Show ensemble details if available
+            if (data.ensemble_details) {
+                modeHtml += `<hr style="margin: 15px 0;">`;
+                modeHtml += `<p><strong>🤖 Ensemble Strategy:</strong> ${data.ensemble_details.strategy.toUpperCase()}</p>`;
+                modeHtml += `<p><strong>Individual Model Results:</strong></p>`;
+                modeHtml += `<ul style="margin-left: 20px;">`;
+                for (const model of data.ensemble_details.individual_models) {
+                    modeHtml += `<li><strong>${model.architecture.toUpperCase()}:</strong> ${model.detections} detections, ${(model.avg_confidence * 100).toFixed(1)}% avg conf</li>`;
+                }
+                modeHtml += `</ul>`;
+            }
+
+            modeInfo.innerHTML = modeHtml;
+
+            // Model Agreement (for ensemble only)
+            if (data.ensemble_details && data.ensemble_details.agreement) {
+                const agreementCard = document.getElementById('agreement-card');
+                const agreementInfo = document.getElementById('agreement-info');
+                const agreement = data.ensemble_details.agreement;
+                const agreementPct = (agreement.agreement_rate * 100).toFixed(1);
+
+                // Color code based on agreement rate
+                let agreementColor = '#f44336'; // red for low
+                if (agreement.agreement_rate > 0.7) {
+                    agreementColor = '#4caf50'; // green for high
+                } else if (agreement.agreement_rate > 0.3) {
+                    agreementColor = '#ff9800'; // orange for medium
+                }
+
+                let agreementHtml = `
+                    <div style="margin-bottom: 15px;">
+                        <p style="font-size: 1.2em; font-weight: bold; color: ${agreementColor};">
+                            Agreement Rate: ${agreementPct}%
+                        </p>
+                        <p style="color: #666; font-size: 0.9em;">
+                            ${agreement.agreement_rate > 0.7 ? 'Models are in strong agreement' :
+                              agreement.agreement_rate > 0.3 ? 'Models show moderate agreement' :
+                              'Models disagree significantly - review individual results'}
+                        </p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #4caf50;">${agreement.both_agree_detections}</div>
+                            <div class="stat-label">Both Detected</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #2196f3;">${agreement.cnn_only}</div>
+                            <div class="stat-label">CNN Only</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #ff9800;">${agreement.attention_only}</div>
+                            <div class="stat-label">Attention Only</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" style="color: #666;">${agreement.both_agree_no_transit}</div>
+                            <div class="stat-label">Both Rejected</div>
+                        </div>
+                    </div>
+                `;
+
+                agreementInfo.innerHTML = agreementHtml;
+                agreementCard.style.display = 'block';
+            } else {
+                document.getElementById('agreement-card').style.display = 'none';
+            }
+
+            // Plot
+            const plotContainer = document.getElementById('plot-container');
+            plotContainer.innerHTML = `<img src="data:image/png;base64,${data.confidence_plot}" alt="Confidence Plot">`;
+
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function showError(message) {
+            stopProgress();
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
