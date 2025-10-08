@@ -251,11 +251,11 @@
             <div class="form-group">
                 <label for="model_choice">Model Selection</label>
                 <select id="model_choice" required>
-                    <option value="cnn">CNN - Fast & Accurate (98.39% acc, 93k params)</option>
-                    <option value="attention">Attention - Balanced (98.40% acc, 406k params)</option>
-                    <option value="ensemble" selected>Ensemble - Best Accuracy (CNN + Attention voting)</option>
+                    <option value="cnn" selected>CNN - Best Overall (100% detection rate)</option>
+                    <option value="resnet">ResNet - Lower False Positives (50% detection, 40% FP)</option>
+                    <option value="ensemble">Ensemble - CNN + ResNet (balanced approach)</option>
                 </select>
-                <small style="color: #666;">Ensemble mode combines both models for highest accuracy</small>
+                <small style="color: #666;">CNN is recommended for best performance. ResNet for fewer false positives.</small>
             </div>
 
             <!-- Data Source Selection -->
