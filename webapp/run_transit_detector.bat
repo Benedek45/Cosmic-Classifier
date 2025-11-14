@@ -5,7 +5,7 @@ echo ========================================
 echo.
 
 echo [1/3] Installing requirements...
-pip install -r ./requirements.txt
+pip install -r requirements.txt
 if %errorlevel% neq 0 (
     echo Error: Failed to install requirements
     pause
@@ -14,7 +14,7 @@ if %errorlevel% neq 0 (
 echo.
 
 echo [2/3] Starting Transit Detector server...
-start /B python ./transit_detector_app_fixed.py
+start /B python transit_detector_app_fixed.py
 
 echo [3/3] Waiting for server to start...
 timeout /t 5 /nobreak > nul
